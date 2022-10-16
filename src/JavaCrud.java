@@ -17,6 +17,8 @@ import java.awt.Color;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
@@ -24,62 +26,62 @@ import java.sql.*;
 
 public class JavaCrud {
 
-	private JFrame frame;
-	private JTextField txtbname;
-	private JTextField txtedition;
-	private JTextField txtprice;
-	private JTable table;
-	private JTextField txtbid;
+    private JFrame frame;
+    private JTextField txtbname;
+    private JTextField txtedition;
+    private JTextField txtprice;
+    private JTable table;
+    private JTextField txtbid;
 
-	Connection con;
-	PreparedStatement pst;
-	ResultSet rs;
+    Connection con;
+    PreparedStatement pst;
+    ResultSet rs;
 
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					JavaCrud window = new JavaCrud();
-					window.frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+    /**
+     * Launch the application.
+     */
+    public static void main(String[] args) {
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    JavaCrud window = new JavaCrud();
+                    window.frame.setVisible(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
 
-	public void Connect() {
+    public void Connect() {
 
-		try {
-			// Etape 1: Chargement du driver
-			Class.forName("com.mysql.jdbc.Driver");
-			// Etape 2: Récupération de la cnx
-			con = DriverManager.getConnection("jdbc:mysql://localhost/javacrud", "root", "");
-		} catch (ClassNotFoundException ex) {
-			ex.printStackTrace();
+        try {
+            // Etape 1: Chargement du driver
+            Class.forName("com.mysql.jdbc.Driver");
+            // Etape 2: Récupération de la cnx
+            con = DriverManager.getConnection("jdbc:mysql://localhost/javacrud", "root", "");
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
 
-		} catch (SQLException ex) {
-			ex.printStackTrace();
-		}
-	}
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
 
-	public void table_load() {
+    public void table_load() {
 
-		try {
-			pst = con.prepareStatement("select * from book");
-			rs = pst.executeQuery();
-			table.setModel(DbUtils.resultSetToTableModel(rs));
-		} catch (SQLException e) {
+        try {
+            pst = con.prepareStatement("select * from book");
+            rs = pst.executeQuery();
+            table.setModel(DbUtils.resultSetToTableModel(rs));
+        } catch (SQLException e) {
 
-			e.printStackTrace();
-		}
+            e.printStackTrace();
+        }
 
-	}
+    }
 
-	/**
+    /**
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
@@ -217,44 +219,48 @@ public class JavaCrud {
 		panel_1.add(lblNewLabel_2_2);
 
 		txtbid = new JTextField();
+    
+		txtbid.addKeyListener(new KeyAdapter() {
+		    @Override
+		    public void keyReleased(KeyEvent e) {
+		        
+	                try {
+
+	                    String id = txtbid.getText();
+
+	                    pst = con.prepareStatement("select name, edition, price from book where id = ?");
+	                    pst.setString(1, id);
+	                    ResultSet rs = pst.executeQuery();
+
+	                    if (rs.next() == true) {
+	                        String name = rs.getString(1);
+	                        String edition = rs.getString(2);
+	                        String price = rs.getString(3);
+
+	                        txtbname.setText(name);
+	                        txtedition.setText(edition);
+	                        txtprice.setText(price);
+
+	                    } else {
+	                        txtbname.setText("");
+	                        txtedition.setText("");
+	                        txtprice.setText("");
+	                    }
+
+	                } catch (SQLException e1) {
+	                    e1.printStackTrace();
+
+	                }
+
+	            
+	                
+	            
+
+		    }
+		});
 
 		
-		/* 
-		txtbid.addKeyListener(new KeyAdapter() {
-			@override
-			public void keyreleased(keyEvent e) {
-
-				try {
-
-					String id = txtbid.getText();
-
-					pst = con.prepareStatement("select name, edition, price from book where id = ?");
-					pst.setString(1, id);
-					ResultSet rs = pst.executeQuery();
-
-					if (rs.next() == true) {
-						String name = rs.getString(1);
-						String edition = rs.getString(2);
-						String price = rs.getString(3);
-
-						txtbname.setText(name);
-						txtedition.setText(edition);
-						txtprice.setText(price);
-
-					} else {
-						txtbname.setText("");
-						txtedition.setText("");
-						txtprice.setText("");
-					}
-
-				} catch (SQLException e1) {
-					e1.printStackTrace();
-
-				}
-
-			}
-		});
-		*/
+		
 
 		txtbid.setColumns(10);
 		txtbid.setBounds(88, 22, 96, 19);
@@ -264,7 +270,8 @@ public class JavaCrud {
 		JButton btnUpdate = new JButton("Update");
 
 		btnUpdate.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+
+		    public void actionPerformed(ActionEvent e) {
 
 				String bname, edition, price, bid;
 
@@ -293,11 +300,13 @@ public class JavaCrud {
 
 				}
 
-			}
+		    
+		    }
 		});
 
 		btnUpdate.setBounds(516, 310, 98, 35);
 		frame.getContentPane().add(btnUpdate);
+		
 
 		// Delete record
 		JButton btnDelete = new JButton("Delete");
@@ -334,14 +343,14 @@ public class JavaCrud {
 
 	}
 
-	/**
-	 * Create the application.
-	 */
-	public JavaCrud() {
-		initialize();
-		Connect();
-		table_load();
+    /**
+     * Create the application.
+     */
+    public JavaCrud() {
+        initialize();
+        Connect();
+        table_load();
 
-	}
+    }
 
 }
